@@ -1,10 +1,11 @@
-import {Component, OnInit, EventEmitter} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {UpdateResponse, UpdateService} from './update/update.service';
-import { ToastrService } from 'ngx-toastr';
-import {Observable} from 'rxjs';
+import {ToastrService} from 'ngx-toastr';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {Select, Store} from '@ngxs/store';
 import {CleanStatusesAction, UpdateStatus, UpdateStatusState} from './state/update-status.state';
 import {AzurePubSubService} from './pubsub/azure-pub-sub.service';
+import {HttpErrorResponse} from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -16,12 +17,12 @@ export class AppComponent implements OnInit {
   @Select(UpdateStatusState.getStatus)
   updateStatuses$: Observable<UpdateStatus>;
 
-  public reenableButton = new EventEmitter<boolean>(false);
+  public disableButton$: Subject<boolean> = new BehaviorSubject<boolean>(false);
 
   constructor(private store: Store,
               private updateService: UpdateService,
               private pubSubService: AzurePubSubService,
-              public toastrService: ToastrService) {
+              private toastrService: ToastrService) {
   }
 
   ngOnInit(): void {
@@ -40,6 +41,9 @@ export class AppComponent implements OnInit {
 
   public runUpdate(): void {
     console.log('run update');
+
+    this.disableButton$.next(true);
+
     this.updateService.startUpdate()
       .subscribe((data: UpdateResponse) => {
         console.log(data);
@@ -48,11 +52,12 @@ export class AppComponent implements OnInit {
           progressBar: false,
           tapToDismiss: true
         });
-      }, () => {
-        this.reenableButton.emit(false);
-      }, () => {
-        this.reenableButton.emit(false);
-      });
+    }, (error: HttpErrorResponse) => {
+        this.disableButton$.next(false);
+        this.toastrService.error(error.message, 'start update error');
+    }, () => {
+        this.disableButton$.next(false);
+    });
   }
 
   public clean(): void {

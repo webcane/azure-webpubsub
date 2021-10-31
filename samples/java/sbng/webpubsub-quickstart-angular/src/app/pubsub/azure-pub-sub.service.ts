@@ -5,13 +5,15 @@ import {ReceiveUpdateStatusAction} from '../state/update-status.state';
 
 import {webSocket} from 'rxjs/webSocket';
 import {WebPubSubServiceClient} from '@azure/web-pubsub';
+import {ToastrService} from 'ngx-toastr';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AzurePubSubService {
 
-  constructor(private store: Store) {
+  constructor(private store: Store,
+              private toastrService: ToastrService) {
   }
 
   async initConnection(): Promise<any> {
@@ -28,7 +30,7 @@ export class AzurePubSubService {
       },
       closeObserver: {
         next: (closeEvent) => {
-          console.log(`code: ${closeEvent.code}, reason: ${closeEvent.reason}`);
+          console.log(`websocket close connection. code: ${closeEvent.code}, reason: ${closeEvent.reason}`);
         }
       }
     });
@@ -40,7 +42,8 @@ export class AzurePubSubService {
           }));
       },
         err => {
-        console.log('ws error: %s', err);
+          console.log('ws error: %s', err);
+          this.toastrService.error('ws connection error');
         }
     );
 

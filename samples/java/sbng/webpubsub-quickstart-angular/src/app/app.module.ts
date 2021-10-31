@@ -6,14 +6,11 @@ import {AppComponent} from './app.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {UpdateStatusState} from './state/update-status.state';
 import {ToastrModule} from 'ngx-toastr';
-import {AppErrorHandler} from './error/app.error.handler';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {DisableAfterClickDirective} from './common/disable-after-click.directive';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    DisableAfterClickDirective
+    AppComponent
   ],
   imports: [
     BrowserModule,
@@ -30,10 +27,7 @@ import {DisableAfterClickDirective} from './common/disable-after-click.directive
       tapToDismiss: false
     })
   ],
-  providers: [{
-    provide: ErrorHandler,
-    useClass: AppErrorHandler
-  }],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {
