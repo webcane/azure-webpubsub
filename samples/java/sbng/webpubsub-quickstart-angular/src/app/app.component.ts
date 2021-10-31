@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, EventEmitter} from '@angular/core';
 import {UpdateResponse, UpdateService} from './update/update.service';
 import { ToastrService } from 'ngx-toastr';
 import {Observable} from 'rxjs';
@@ -16,6 +16,8 @@ export class AppComponent implements OnInit {
   @Select(UpdateStatusState.getStatus)
   updateStatuses$: Observable<UpdateStatus>;
 
+  public reenableButton = new EventEmitter<boolean>(false);
+
   constructor(private store: Store,
               private updateService: UpdateService,
               private pubSubService: AzurePubSubService,
@@ -23,7 +25,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.updateStatuses$.subscribe(value => {
+    this.updateStatuses$.subscribe((value) => {
       console.log('new update status: ', value);
     });
 
@@ -41,7 +43,15 @@ export class AppComponent implements OnInit {
     this.updateService.startUpdate()
       .subscribe((data: UpdateResponse) => {
         console.log(data);
-        this.toastrService.success((data.response).toString());
+        this.toastrService.success((data.response).toString(), '', {
+          timeOut: 3000,
+          progressBar: false,
+          tapToDismiss: true
+        });
+      }, () => {
+        this.reenableButton.emit(false);
+      }, () => {
+        this.reenableButton.emit(false);
       });
   }
 
