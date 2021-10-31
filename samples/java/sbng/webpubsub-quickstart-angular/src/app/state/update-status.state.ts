@@ -1,7 +1,10 @@
 import { Action, Selector, State, StateContext } from '@ngxs/store';
 import { produce } from 'immer';
-import {STATUSES, UpdateStatus} from './update-status.service';
 import {Injectable} from '@angular/core';
+
+export interface UpdateStatus {
+  value: string;
+}
 
 export interface UpdateStatusModel {
   statuses: UpdateStatus[];

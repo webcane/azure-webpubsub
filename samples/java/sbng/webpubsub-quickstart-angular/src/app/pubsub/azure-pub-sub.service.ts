@@ -1,10 +1,9 @@
 import {Injectable} from '@angular/core';
-import {environment} from './../../environments/environment';
+import {environment} from '../../environments/environment';
 import {Store} from '@ngxs/store';
 import {ReceiveUpdateStatusAction} from '../state/update-status.state';
 
-// import {WebSocket} from 'ws';
-import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
+import {webSocket} from 'rxjs/webSocket';
 import {WebPubSubServiceClient} from '@azure/web-pubsub';
 
 @Injectable({
@@ -29,8 +28,7 @@ export class AzurePubSubService {
       },
       closeObserver: {
         next: (closeEvent) => {
-          const customError = { code: 6666, reason: 'Custom evil reason' };
-          console.log(`code: ${customError.code}, reason: ${customError.reason}`);
+          console.log(`code: ${closeEvent.code}, reason: ${closeEvent.reason}`);
         }
       }
     });
