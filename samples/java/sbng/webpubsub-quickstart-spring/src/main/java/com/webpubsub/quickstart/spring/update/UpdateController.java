@@ -6,10 +6,9 @@ import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Collections;
 
 /**
@@ -26,25 +25,11 @@ public class UpdateController {
     @Autowired
     private UpdateStatusService jobService;
 
-//    @PostMapping("/update")
-//    public ResponseEntity<?> startUpdate(@RequestBody UpdateRequest newUpdate) {
-//        if(newUpdate.getId() % 2 == 0) {
-//            // enqueue the update status job
-//            jobScheduler.enqueue(() -> jobService.updateStatus());
-//
-//            return ResponseEntity.ok(newUpdate);
-//        }
-//        return ResponseEntity
-//                .status(HttpStatus.BAD_REQUEST)
-//                .body("Unable to execute the start update request. id " + newUpdate.getId());
-//    }
-
-    @GetMapping(path = "/update/start", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> startUpdate() {
-        log.info("Enqueue an update status job");
-        jobScheduler.enqueue(() -> jobService.updateStatus());
+    @PostMapping(path = "/update/start", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> startUpdate(@Valid @RequestBody UpdateRequest newUpdate) {
+        log.info("Enqueue an update status job {}", newUpdate);
+        jobScheduler.enqueue(() -> jobService.updateStatus(newUpdate.getUserName(), newUpdate.getCampaignId()));
         return ResponseEntity.ok(
-                Collections.singletonMap("response", "enqueue an update"));
+                Collections.singletonMap("response", "enqueue an update for campaign #" + newUpdate.getCampaignId()));
     }
-
 }

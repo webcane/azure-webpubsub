@@ -1,20 +1,35 @@
 <div class="content" role="main">
-  <!-- Resources -->
-  <h2>Update</h2>
-  <button type="button" class="btn btn-success"
-          (click)="runUpdate()"
-          [disabled]="disableButton$ | async">Run update</button>
 
-  <!-- Terminal -->
-  <h2>Status</h2>
-  <div class="terminal">
-    <pre *ngFor="let updateStatus of updateStatuses$ | async">
-      {{ updateStatus.value }}
-    </pre>
-  </div>
+  <h2>Campaigns</h2>
+  <ul ngbNav #nav="ngbNav" [(activeId)]="selectedCampaign" class="nav-campaigns">
+    <li *ngFor="let campaign of campaigns$ | async" [ngbNavItem]="campaign">
+      <a ngbNavLink>
+        {{ campaign.name }}
+      </a>
+      <ng-template ngbNavContent>
+        <p>{{ campaign.name }} statuses:</p>
+        <ul>
+          <li *ngFor="let updateStatus of campaign.statuses">
+            {{ updateStatus }}
+          </li>
+        </ul>
+      </ng-template>
+    </li>
+  </ul>
+
+  <div [ngbNavOutlet]="nav" class="ml-4"></div>
 
   <h2></h2>
-  <button type="button" class="btn btn-success" (click)="clean()">Clean</button>
+  <div class="btn-group btn-group-toggle mb-3">
+    <button class="btn btn-sm btn-outline-primary"
+            [disabled]="selectedCampaign === undefined || isUpdateRunning"
+            (click)="runCampaignUpdate()">Run update
+    </button>
+    <button class="btn btn-sm btn-outline-primary"
+            [disabled]="selectedCampaign === undefined || isUpdateRunning"
+            (click)="cleanCampaignStatuses()">Clean
+    </button>
+  </div>
 </div>
 
 

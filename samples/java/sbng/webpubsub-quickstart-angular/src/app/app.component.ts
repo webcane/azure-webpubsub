@@ -3,9 +3,11 @@ import {UpdateResponse, UpdateService} from './update/update.service';
 import {ToastrService} from 'ngx-toastr';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {Select, Store} from '@ngxs/store';
-import {CleanStatusesAction, UpdateStatus, UpdateStatusState} from './state/update-status.state';
 import {AzurePubSubService} from './pubsub/azure-pub-sub.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {environment} from '../environments/environment';
+import {CampaignsState, RemoveCampaignStatusesAction, SelectCampaignAction} from './campaigns/campaigns.state';
+import {Campaign, CampaignsService} from './campaigns/campaigns.service';
 
 @Component({
   selector: 'app-root',
@@ -14,23 +16,22 @@ import {HttpErrorResponse} from '@angular/common/http';
 })
 export class AppComponent implements OnInit {
 
-  @Select(UpdateStatusState.getStatus)
-  updateStatuses$: Observable<UpdateStatus>;
+  @Select(CampaignsState.listCampaigns)
+  campaigns$: Observable<Campaign[]>;
 
-  public disableButton$: Subject<boolean> = new BehaviorSubject<boolean>(false);
+  selectedCampaign: Campaign;
+
+  isUpdateRunning = false;
 
   constructor(private store: Store,
               private updateService: UpdateService,
               private pubSubService: AzurePubSubService,
+              private campaignsService: CampaignsService,
               private toastrService: ToastrService) {
   }
 
   ngOnInit(): void {
-    this.updateStatuses$.subscribe((value) => {
-      console.log('new update status: ', value);
-    });
-
-    this.pubSubService.initConnection()
+    this.pubSubService.initConnection(environment.pubsubUserName)
         .then(success => {
           console.log(success);
         })
@@ -39,29 +40,33 @@ export class AppComponent implements OnInit {
         });
   }
 
-  public runUpdate(): void {
-    console.log('run update');
+  public runCampaignUpdate(): void {
+    if (this.selectedCampaign === undefined) {
+      this.toastrService.warning('select a campaign');
+    }
+    else {
+      console.log('run update');
+      this.isUpdateRunning = true;
 
-    this.disableButton$.next(true);
-
-    this.updateService.startUpdate()
-      .subscribe((data: UpdateResponse) => {
-        console.log(data);
-        this.toastrService.success((data.response).toString(), '', {
-          timeOut: 3000,
-          progressBar: false,
-          tapToDismiss: true
+      this.updateService.startUpdate(environment.pubsubUserName, this.selectedCampaign.campaignId)
+        .subscribe((data: UpdateResponse) => {
+          console.log(data);
+          this.toastrService.success((data.response).toString(), '', {
+            timeOut: 3000,
+            progressBar: false,
+            tapToDismiss: true
+          });
+        }, (error: HttpErrorResponse) => {
+          this.isUpdateRunning = false;
+          this.toastrService.error(error.message, 'start update error');
+        }, () => {
+          this.isUpdateRunning = false;
         });
-    }, (error: HttpErrorResponse) => {
-        this.disableButton$.next(false);
-        this.toastrService.error(error.message, 'start update error');
-    }, () => {
-        this.disableButton$.next(false);
-    });
+    }
   }
 
-  public clean(): void {
-    this.store.dispatch(new CleanStatusesAction());
+  public cleanCampaignStatuses(): void {
+    console.log('clean all campaign statuses');
+    this.store.dispatch(new RemoveCampaignStatusesAction(this.selectedCampaign));
   }
-
 }

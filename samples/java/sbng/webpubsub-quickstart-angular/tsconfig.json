@@ -17,6 +17,7 @@
       "dom"
     ],
     "paths": {
+      "@env/*": ["environments/*"],
       "crypto":["node_modules/crypto-browserify"],
       "stream":["node_modules/stream-browserify"],
       "jsonwebtoken":["node_modules/jsonwebtoken"]

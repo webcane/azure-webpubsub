@@ -1,27 +1,43 @@
 import {Injectable} from '@angular/core';
 import {environment} from '../../environments/environment';
 import {Store} from '@ngxs/store';
-import {ReceiveUpdateStatusAction} from '../state/update-status.state';
 
 import {webSocket} from 'rxjs/webSocket';
-import {WebPubSubServiceClient} from '@azure/web-pubsub';
 import {ToastrService} from 'ngx-toastr';
+import {HttpClient} from '@angular/common/http';
+import {ReceiveCampaignStatusAction} from '../campaigns/campaigns.state';
+
+export interface NegotiateResponse {
+  token: string;
+}
+
+export enum UpdateStatus {
+  PENDING,
+  UPDATING,
+  FINISHED,
+}
+
+export interface CampaignStatus {
+  campaignId: number;
+  updateStatus: UpdateStatus;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AzurePubSubService {
 
-  constructor(private store: Store,
+  constructor(private httpClient: HttpClient,
+              private store: Store,
               private toastrService: ToastrService) {
   }
 
-  async initConnection(): Promise<any> {
-    const serviceClient = new WebPubSubServiceClient(environment.pubsubConnectionString, environment.pubsubHubName);
-    const token = await serviceClient.getAuthenticationToken();
+  async initConnection(pubsubUserName: string): Promise<any> {
+    const negotiateReq = await this.httpClient.get<NegotiateResponse>(
+      environment.apiUrl + `/negotiate?id=${pubsubUserName}`).toPromise();
 
     const wsSubject = webSocket({
-      url: token.url,
+      url: negotiateReq.token,
       deserializer: ({data}) => data,
       openObserver: {
         next: () => {
@@ -35,11 +51,9 @@ export class AzurePubSubService {
       }
     });
     wsSubject.subscribe(
-      msg => {
-          console.log('ws message received: %s', msg);
-          this.store.dispatch(new ReceiveUpdateStatusAction({
-            value: (msg).toString()
-          }));
+      data => {
+          console.log('ws message received: %s', data);
+          this.store.dispatch(new ReceiveCampaignStatusAction(JSON.parse(data)));
       },
         err => {
           console.log('ws error: %s', err);

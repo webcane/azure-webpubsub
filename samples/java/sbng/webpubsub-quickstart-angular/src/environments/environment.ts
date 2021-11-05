@@ -6,7 +6,8 @@ export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080',
   pubsubConnectionString: '<connection-string>',
-  pubsubHubName: 'myHub1'
+  pubsubHubName: '<hub-name>',
+  pubsubUserName: '<user-name>'
 };
 
 /*

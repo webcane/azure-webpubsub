@@ -15,8 +15,12 @@ export class UpdateService {
   constructor(private httpClient: HttpClient) {
   }
 
-  public startUpdate(): Observable<UpdateResponse | any> {
-    return this.httpClient.get(environment.apiUrl + '/update/start');
+  public startUpdate(pubsubUserName: string, campaignId: number): Observable<UpdateResponse> {
+    return this.httpClient.post<UpdateResponse>(environment.apiUrl + `/update/start`,
+      {
+        userName: pubsubUserName,
+        campaignId
+      });
   }
 
 }
